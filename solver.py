@@ -803,13 +803,13 @@ class Solver(object):
 
                 if self.dataset in cocoAndCelebset:
                     d_loss_cls = F.binary_cross_entropy_with_logits(
-                        out_cls.view(cbsz, -1), real_label, size_average=False) / cbsz
+                        out_cls[-1].view(cbsz, -1), real_label, size_average=False) / cbsz
                 else:
                     d_loss_cls = F.cross_entropy(out_cls, real_label)
 
                 # Compute classification accuracy of the discriminator
                 if (i+1) % self.log_step == 0:
-                    accuracies = self.compute_accuracy(out_cls.view(cbsz,-1), real_label, self.dataset)
+                    accuracies = self.compute_accuracy(out_cls[-1].view(cbsz,-1), real_label, self.dataset)
                     accLog['acc'] = accLog['acc'] * 0.8 + (1-0.8)* accuracies.data.cpu().numpy() if 'acc' in accLog else  accuracies.data.cpu().numpy()
                     log = ["{}: {:.2f}".format(self.selected_attrs[cati],acc) for cati,acc in enumerate(accLog['acc'])]
                     print(log)
@@ -825,7 +825,7 @@ class Solver(object):
 
                 if self.adv_classifier:
                     d_loss_cls = d_loss_cls + (F.binary_cross_entropy_with_logits(
-                        out_cls_fake.view(cbsz,-1), real_label, size_average=False) / cbsz)
+                        out_cls_fake[-1].view(cbsz,-1), real_label, size_average=False) / cbsz)
 
                 # Backward + Optimize
                 if not self.use_seperate_classifier:
@@ -923,7 +923,7 @@ class Solver(object):
 
                     if self.dataset in cocoAndCelebset:
                         g_loss_cls = F.binary_cross_entropy_with_logits(
-                            out_cls.view(cbsz,-1), fake_label, size_average=False) / cbsz
+                            out_cls[-1].view(cbsz,-1), fake_label, size_average=False) / cbsz
                     else:
                         g_loss_cls = F.cross_entropy(out_cls, fake_label)
 

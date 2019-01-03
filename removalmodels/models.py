@@ -1662,6 +1662,7 @@ class VGGLoss(nn.Module):
         else:
             self.chns = [64,128,256,384,384,512,512]
 
+        self.use_perceptual = use_perceptual
         if use_perceptual:
             self.use_perceptual = True
             self.lin0 = NetLinLayer(self.chns[0],use_dropout=False)
@@ -1694,7 +1695,9 @@ class VGGLoss(nn.Module):
                 self.lin5.cuda()
                 self.lin6.cuda()
         if self.use_perceptual:
-            self.load_state_dict(torch.load('/BS/rshetty-wrk/work/code/controlled-generation/trained_models/perceptualSim/'+network+'.pth'), strict=False)
+            r = '/home/darwin/.torch/models/'
+            m = 'vgg19-dcbb9e9d.pth' if network == 'vgg' else 'squeezenet1_1-f364aa15.pth'
+            self.load_state_dict(torch.load(r + m), strict=False)
         for param in self.parameters():
             param.requires_grad = False
 
