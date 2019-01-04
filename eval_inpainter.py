@@ -19,6 +19,7 @@ from utils.data_loader_stargan import get_dataset
 from torch.backends import cudnn
 from utils.utils import show
 from skimage.measure import compare_ssim, compare_psnr
+import matplotlib.pyplot as plt
 
 class ParamObject(object):
 
@@ -183,11 +184,21 @@ def gen_samples(params):
         x = x[None,::]; boxImg = boxImg[None,::]; mask = mask[None,::]; boxlabel = boxlabel[None,::]; real_label = real_label[None,::]
 
         x, boxImg, mask, boxlabel = solvers[0].to_var(x, volatile=True), solvers[0].to_var(boxImg, volatile=True), solvers[0].to_var(mask, volatile=True), solvers[0].to_var(boxlabel, volatile=True)
-        fake_x, mask_out = solvers[0].forward_generator(x, imagelabel = None, mask_threshold=params['mask_threshold'], onlyMasks=False, mask=mask, withGTMask=True, dilate = dilateWeight)
+        real_label = solvers[0].to_var(real_label, volatile=True)
+        fake_x, mask_out = solvers[0].forward_generator(x, imagelabel = real_label, mask_threshold=params['mask_threshold'], onlyMasks=False, mask=mask, withGTMask=False, dilate = dilateWeight)
         vL = vggLoss(fake_x, x).data[0]
         # Change the image range to 0, 255
         fake_x_sk = get_sk_image(fake_x)
         x_sk = get_sk_image(x)
+        a = x.data.cpu().numpy()
+        print(a.shape)
+        plt.subplot(121)
+        plt.imshow(np.rollaxis(x.data.cpu().numpy().squeeze(), 0, start=3))
+        plt.subplot(122)
+        plt.imshow(np.rollaxis(fake_x.data.cpu().numpy().squeeze(), 0, start=3))
+        plt.savefig('%d.png' % (i, ))
+        if i == 9:
+            break
         pSNR = compare_psnr(fake_x_sk,x_sk,data_range = 255.)
         ssim = compare_ssim(fake_x_sk,x_sk,data_range = 255., multichannel=True)
         msz = mask.data.cpu().numpy().mean()
